@@ -93,7 +93,7 @@ pipeline {
                 echo 'Checking out source code from GitHub...'
                 
                 // Verify Maven installation
-                sh 'mvn --version'
+                bat 'mvn --version'
                 
                 echo '✓ Checkout completed successfully'
             }
@@ -115,11 +115,11 @@ pipeline {
                 dir('backend') {
                     // Clean previous builds
                     echo 'Running: mvn clean...'
-                    sh 'mvn clean'
+                    bat 'mvn clean'
                     
                     // Compile source code
                     echo 'Running: mvn compile...'
-                    sh 'mvn compile'
+                    bat 'mvn compile'
                 }
                 
                 echo '✓ Build completed successfully'
@@ -141,7 +141,7 @@ pipeline {
                 dir('backend') {
                     // Run tests
                     echo 'Running: mvn test...'
-                    sh 'mvn test'
+                    bat 'mvn test'
                 }
                 
                 echo '✓ All tests passed successfully'
@@ -177,13 +177,13 @@ pipeline {
                 dir('backend') {
                     // Create JAR file
                     echo 'Running: mvn package...'
-                    sh 'mvn package -DskipTests'
+                    bat 'mvn package -DskipTests'
                 }
                 
                 echo '✓ Application packaged successfully'
                 
                 // Show created artifact
-                sh 'ls -lh backend/target/*.jar'
+                bat 'dir backend\\target\\*.jar'
             }
         }
         

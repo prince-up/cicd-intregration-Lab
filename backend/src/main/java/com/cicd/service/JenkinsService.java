@@ -6,9 +6,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.net.URI;
+import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Random;
 
@@ -61,13 +63,21 @@ public class JenkinsService {
         // Format: /job/{jobName}/buildWithParameters
         String buildUrl = String.format("%s/job/%s/buildWithParameters", jenkinsUrl, jenkinsJobName);
 
-        // Build URL with parameters
+        // URL encode parameters to handle spaces and special characters
+        String encodedRepoUrl = URLEncoder.encode(request.getRepositoryUrl(), StandardCharsets.UTF_8);
+        String encodedBranch = URLEncoder.encode(
+            request.getBranchName() != null ? request.getBranchName() : "main", 
+            StandardCharsets.UTF_8
+        );
+        String encodedStudentName = URLEncoder.encode(request.getStudentName(), StandardCharsets.UTF_8);
+
+        // Build URL with encoded parameters
         String urlWithParams = String.format(
             "%s?REPO_URL=%s&BRANCH=%s&STUDENT_NAME=%s",
             buildUrl,
-            request.getRepositoryUrl(),
-            request.getBranchName() != null ? request.getBranchName() : "main",
-            request.getStudentName()
+            encodedRepoUrl,
+            encodedBranch,
+            encodedStudentName
         );
 
         // Create HTTP request with Basic Authentication

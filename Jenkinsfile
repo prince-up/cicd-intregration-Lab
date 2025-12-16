@@ -34,8 +34,8 @@ pipeline {
      * These tools must be configured in Jenkins Global Tool Configuration
      */
     tools {
-        maven 'Maven-3.9'  // Maven for build automation
-        jdk 'JDK-17'       // Java Development Kit 17
+        maven 'Maven-3'  // Maven for build automation
+        jdk 'JDK-17'     // Java Development Kit 17
     }
     
     /*

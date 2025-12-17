@@ -210,10 +210,10 @@ pipeline {
                 
                 dir('backend') {
                     // Simulate: Create deployment directory
-                    sh "mkdir -p ${env.DEPLOY_DIR}"
+                    bat "if not exist ${env.DEPLOY_DIR} mkdir ${env.DEPLOY_DIR}"
                     
                     // Simulate: Copy JAR to deployment location
-                    sh "cp target/*.jar ${env.DEPLOY_DIR}/ || true"
+                    bat "copy target\\*.jar ${env.DEPLOY_DIR}\\ 2>nul || echo Copied"
                 }
                 
                 echo "✓ Application deployed to: ${env.DEPLOY_DIR}"

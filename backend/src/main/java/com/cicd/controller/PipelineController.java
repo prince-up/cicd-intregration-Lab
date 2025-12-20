@@ -29,7 +29,7 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api/pipeline")
-@CrossOrigin(origins = "http://localhost:3000") // Allow React frontend
+// @CrossOrigin handled globally in WebConfig
 @RequiredArgsConstructor
 @Slf4j
 public class PipelineController {

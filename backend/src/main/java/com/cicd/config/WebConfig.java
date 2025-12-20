@@ -37,7 +37,7 @@ public class WebConfig {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/api/**") // Apply to all /api/* endpoints
-                        .allowedOrigins(allowedOrigins.split(",")) // Allow React app
+                        .allowedOrigins("*") // Allow all origins (Vercel, Localhost, etc.)
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS") // Allow all methods
                         .allowedHeaders("*") // Allow all headers
                         .allowCredentials(true) // Allow cookies

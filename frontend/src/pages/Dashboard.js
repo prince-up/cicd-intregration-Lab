@@ -36,8 +36,16 @@ const Dashboard = () => {
       setExecutions(data);
       setError(null);
     } catch (err) {
-      setError('Failed to fetch executions. Is the backend running?');
-      console.error(err);
+      console.error("Dashboard Fetch Error:", err);
+      let errorMessage = 'Failed to fetch executions.';
+
+      if (err.code === "ERR_NETWORK") {
+        errorMessage = `Cannot connect to backend at ${process.env.REACT_APP_API_URL || 'localhost:9090'}. Is the backend running?`;
+      } else if (err.response) {
+        errorMessage = `Server Error: ${err.response.status} ${err.response.statusText}`;
+      }
+
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

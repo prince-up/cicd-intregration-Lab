@@ -37,7 +37,7 @@ const TriggerPipeline = () => {
       const urlParts = formData.repositoryUrl.replace('.git', '').split('/');
       const owner = urlParts[urlParts.length - 2];
       const repo = urlParts[urlParts.length - 1];
-      
+
       // Fetch latest commit SHA from GitHub
       let commitHash = null;
       try {
@@ -52,21 +52,33 @@ const TriggerPipeline = () => {
       } catch (err) {
         console.warn('Could not fetch commit SHA:', err);
       }
-      
+
       // Trigger pipeline with commit hash
       const response = await triggerPipeline({
         ...formData,
         commitHash: commitHash
       });
       setSuccess(true);
-      
+
       // Redirect to execution details after 2 seconds
       setTimeout(() => {
         navigate(`/execution/${response.id}`);
       }, 2000);
     } catch (err) {
-      setError('Failed to trigger pipeline. Make sure the backend is running.');
-      console.error(err);
+      console.error('Pipeline Trigger Error:', err);
+      let errorMessage = 'Failed to trigger pipeline.';
+
+      if (err.response && err.response.data && err.response.data.message) {
+        // Backend returned a specific error message
+        errorMessage = `Error: ${err.response.data.message}`;
+      } else if (err.message === 'Network Error') {
+        // Network error (CORS, backend down, wrong URL)
+        errorMessage = 'Network Error: Could not connect to backend. Check API URL.';
+      } else {
+        errorMessage = `Error: ${err.message || 'Unknown error occurred'}`;
+      }
+
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

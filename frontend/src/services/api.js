@@ -18,6 +18,16 @@ const api = axios.create({
   },
 });
 
+// Log the API URL being used to help with debugging
+console.log('🔌 API Service Initialized');
+console.log('📍 Target Backend URL:', API_BASE_URL);
+
+// Add request interceptor for debugging
+api.interceptors.request.use(request => {
+  console.log('🚀 Starting Request:', request.method.toUpperCase(), request.url);
+  return request;
+});
+
 /**
  * Trigger a new CI/CD pipeline
  * 
@@ -29,7 +39,19 @@ export const triggerPipeline = async (pipelineData) => {
     const response = await api.post('/trigger', pipelineData);
     return response.data;
   } catch (error) {
-    console.error('Error triggering pipeline:', error);
+    console.error('❌ Error triggering pipeline:', error);
+    if (error.response) {
+      // The request was made and the server responded with a status code
+      // that falls out of the range of 2xx
+      console.error('Data:', error.response.data);
+      console.error('Status:', error.response.status);
+    } else if (error.request) {
+      // The request was made but no response was received
+      console.error('No response received:', error.request);
+    } else {
+      // Something happened in setting up the request that triggered an Error
+      console.error('Error Message:', error.message);
+    }
     throw error;
   }
 };

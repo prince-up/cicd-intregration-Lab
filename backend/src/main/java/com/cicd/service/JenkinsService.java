@@ -80,13 +80,30 @@ public class JenkinsService {
             encodedStudentName
         );
 
-        // Create HTTP request with Basic Authentication
-        HttpRequest httpRequest = HttpRequest.newBuilder()
+        // Get Jenkins Crumb for CSRF protection
+        String[] crumb = getCrumb();
+        log.info("CSRF Crumb: {}", crumb != null ? crumb[0] + "=" + crumb[1] : "null");
+        
+        // Create HTTP request with Basic Authentication and CSRF token
+        String authHeader = getBasicAuthHeader();
+        log.info("Auth header: {}", authHeader.substring(0, Math.min(20, authHeader.length())) + "...");
+        log.info("Triggering Jenkins at URL: {}", urlWithParams);
+        
+        HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
                 .uri(URI.create(urlWithParams))
-                .header("Authorization", getBasicAuthHeader())
+                .header("Authorization", authHeader)
                 .header("Content-Type", "application/x-www-form-urlencoded")
-                .POST(HttpRequest.BodyPublishers.noBody())
-                .build();
+                .POST(HttpRequest.BodyPublishers.noBody());
+        
+        // Add CSRF crumb if available
+        if (crumb != null) {
+            log.info("Adding CSRF crumb header: {} = {}", crumb[0], crumb[1]);
+            requestBuilder.header(crumb[0], crumb[1]);
+        } else {
+            log.warn("No CSRF crumb available - request might fail!");
+        }
+        
+        HttpRequest httpRequest = requestBuilder.build();
 
         try {
             // Send request to Jenkins
@@ -95,19 +112,25 @@ public class JenkinsService {
             if (response.statusCode() == 201 || response.statusCode() == 200) {
                 log.info("Jenkins build triggered successfully");
                 
-                // LEARNING NOTE: In real scenario, get build number from Jenkins queue API
-                // For demo purposes, we simulate a build number
-                return generateBuildNumber();
+                // Get queue item location from response header
+                String queueLocation = response.headers().firstValue("Location").orElse(null);
+                
+                if (queueLocation != null) {
+                    // Wait and get actual build number from queue
+                    return waitForBuildNumber(queueLocation);
+                } else {
+                    // Fallback: get next build number
+                    return getNextBuildNumber();
+                }
             } else {
                 log.error("Jenkins returned status code: {}", response.statusCode());
-                throw new RuntimeException("Failed to trigger Jenkins build. Status: " + response.statusCode());
+                log.error("Jenkins response body: {}", response.body());
+                log.error("Jenkins response headers: {}", response.headers());
+                throw new RuntimeException("Failed to trigger Jenkins build. Status: " + response.statusCode() + " - " + response.body());
             }
         } catch (Exception e) {
             log.error("Error communicating with Jenkins", e);
-            
-            // LEARNING NOTE: For demo without actual Jenkins, we simulate success
-            log.warn("Jenkins not available - running in DEMO MODE");
-            return generateBuildNumber();
+            throw new RuntimeException("Failed to trigger Jenkins build: " + e.getMessage());
         }
     }
 
@@ -118,12 +141,14 @@ public class JenkinsService {
      * @return Build status (SUCCESS, FAILURE, RUNNING, etc.)
      */
     public String getBuildStatus(Integer buildNumber) {
-        log.info("Fetching build status for build number: {}", buildNumber);
+        log.debug("Fetching build status for build number: {}", buildNumber);
+        System.out.println("DEBUG: Fetching status for build " + buildNumber);
 
         String statusUrl = String.format(
             "%s/job/%s/%d/api/json",
             jenkinsUrl, jenkinsJobName, buildNumber
         );
+        System.out.println("DEBUG: Status URL: " + statusUrl);
 
         try {
             HttpRequest request = HttpRequest.newBuilder()
@@ -133,23 +158,42 @@ public class JenkinsService {
                     .build();
 
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            System.out.println("DEBUG: Response Code: " + response.statusCode());
 
             if (response.statusCode() == 200) {
-                // Parse JSON response (simplified - in production use JSON library)
                 String body = response.body();
-                if (body.contains("\"result\":\"SUCCESS\"")) {
-                    return "SUCCESS";
-                } else if (body.contains("\"result\":\"FAILURE\"")) {
-                    return "FAILURE";
-                } else if (body.contains("\"building\":true")) {
+                System.out.println("DEBUG: Response Body: " + body);
+                // Parse JSON using Jackson
+                com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+                com.fasterxml.jackson.databind.JsonNode root = mapper.readTree(body);
+                
+                boolean isBuilding = root.path("building").asBoolean(false);
+                String result = root.path("result").asText(null);
+                
+                if (isBuilding) {
+                    System.out.println("DEBUG: Status is RUNNING");
                     return "RUNNING";
                 }
+                
+                if (result != null && !result.equals("null")) {
+                    System.out.println("DEBUG: Status is " + result);
+                    return result; // SUCCESS, FAILURE, ABORTED, etc.
+                }
+                
+                // If not building and no result, likely undefined or just finished
+                System.out.println("DEBUG: Status indeterminate -> RUNNING");
+                return "RUNNING";
+            } else {
+                log.warn("Jenkins returned non-200 status for build {}: {}", buildNumber, response.statusCode());
+                System.out.println("DEBUG: Non-200 Status: " + response.statusCode());
             }
         } catch (Exception e) {
             log.error("Error fetching build status from Jenkins", e);
+            System.out.println("DEBUG: Exception: " + e.getMessage());
+            e.printStackTrace();
         }
 
-        // Demo mode - simulate status
+        // Keep RUNNING if we can't determine status (temporary network blip?)
         return "RUNNING";
     }
 
@@ -187,6 +231,59 @@ public class JenkinsService {
     }
 
     /**
+     * Get Jenkins Crumb for CSRF protection
+     * Returns [headerName, headerValue] or null if not available
+     */
+    private String[] getCrumb() {
+        try {
+            String crumbUrl = jenkinsUrl + "/crumbIssuer/api/json";
+            log.info("Fetching CSRF crumb from: {}", crumbUrl);
+            
+            HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(crumbUrl))
+                .header("Authorization", getBasicAuthHeader())
+                .GET()
+                .build();
+            
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            log.info("Crumb response status: {}", response.statusCode());
+            
+            if (response.statusCode() == 200) {
+                String body = response.body();
+                log.debug("Crumb response body: {}", body);
+                // Parse JSON: {"crumb":"xxx","crumbRequestField":"Jenkins-Crumb"}
+                String crumbValue = extractJsonValue(body, "crumb");
+                String crumbField = extractJsonValue(body, "crumbRequestField");
+                
+                if (crumbValue != null && crumbField != null) {
+                    log.info("✓ Got Jenkins crumb: {} = {}", crumbField, crumbValue.substring(0, Math.min(10, crumbValue.length())) + "...");
+                    return new String[]{crumbField, crumbValue};
+                } else {
+                    log.error("Failed to parse crumb from response: {}", body);
+                }
+            } else {
+                log.error("Failed to get crumb. Status: {}, Body: {}", response.statusCode(), response.body());
+            }
+        } catch (Exception e) {
+            log.error("Could not get Jenkins crumb: {}", e.getMessage(), e);
+        }
+        return null;
+    }
+
+    /**
+     * Simple JSON value extractor
+     */
+    private String extractJsonValue(String json, String key) {
+        String searchKey = "\"" + key + "\":\"";
+        int start = json.indexOf(searchKey);
+        if (start == -1) return null;
+        start += searchKey.length();
+        int end = json.indexOf("\"", start);
+        if (end == -1) return null;
+        return json.substring(start, end);
+    }
+
+    /**
      * Create Basic Authentication header
      * 
      * Jenkins API requires authentication using username and API token
@@ -205,5 +302,78 @@ public class JenkinsService {
      */
     private Integer generateBuildNumber() {
         return 100 + new Random().nextInt(900); // Random number between 100-999
+    }
+
+    /**
+     * Wait for build to start and get actual build number from Jenkins queue
+     */
+    private Integer waitForBuildNumber(String queueLocation) throws Exception {
+        log.info("Waiting for build number from queue: {}", queueLocation);
+        
+        // Try to get build number from queue for up to 10 seconds
+        for (int i = 0; i < 20; i++) {
+            try {
+                HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(queueLocation + "api/json"))
+                    .header("Authorization", getBasicAuthHeader())
+                    .GET()
+                    .build();
+                
+                HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+                
+                if (response.statusCode() == 200) {
+                    String body = response.body();
+                    // Parse JSON to get executable.number
+                    if (body.contains("\"executable\"")) {
+                        int start = body.indexOf("\"number\":") + 9;
+                        int end = body.indexOf(",", start);
+                        if (end == -1) end = body.indexOf("}", start);
+                        String numberStr = body.substring(start, end).trim();
+                        Integer buildNumber = Integer.parseInt(numberStr);
+                        log.info("Got build number from queue: {}", buildNumber);
+                        return buildNumber;
+                    }
+                }
+                
+                Thread.sleep(500); // Wait 500ms before retry
+            } catch (Exception e) {
+                log.debug("Queue check attempt {} failed: {}", i + 1, e.getMessage());
+            }
+        }
+        
+        // Fallback if queue check fails
+        log.warn("Could not get build number from queue, using next build number");
+        return getNextBuildNumber();
+    }
+
+    /**
+     * Get next build number from Jenkins job
+     */
+    private Integer getNextBuildNumber() throws Exception {
+        String jobUrl = String.format("%s/job/%s/api/json", jenkinsUrl, jenkinsJobName);
+        
+        HttpRequest request = HttpRequest.newBuilder()
+            .uri(URI.create(jobUrl))
+            .header("Authorization", getBasicAuthHeader())
+            .GET()
+            .build();
+        
+        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+        
+        if (response.statusCode() == 200) {
+            String body = response.body();
+            // Parse nextBuildNumber from JSON
+            if (body.contains("\"nextBuildNumber\":")) {
+                int start = body.indexOf("\"nextBuildNumber\":") + 18;
+                int end = body.indexOf(",", start);
+                if (end == -1) end = body.indexOf("}", start);
+                String numberStr = body.substring(start, end).trim();
+                Integer nextNumber = Integer.parseInt(numberStr);
+                log.info("Next build number: {}", nextNumber);
+                return nextNumber;
+            }
+        }
+        
+        throw new RuntimeException("Could not determine build number from Jenkins");
     }
 }

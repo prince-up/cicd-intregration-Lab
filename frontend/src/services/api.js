@@ -8,7 +8,7 @@
 import axios from 'axios';
 
 // Backend API base URL
-const API_BASE_URL = 'http://localhost:9090/api/pipeline';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:9090/api/pipeline';
 
 // Create axios instance with default configuration
 const api = axios.create({

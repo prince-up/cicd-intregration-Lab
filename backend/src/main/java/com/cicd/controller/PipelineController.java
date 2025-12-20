@@ -6,6 +6,7 @@ import com.cicd.model.TestResultResponse;
 import com.cicd.service.PipelineService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -202,5 +203,19 @@ public class PipelineController {
         health.put("service", "Student CI/CD Lab");
         health.put("version", "1.0.0");
         return ResponseEntity.ok(health);
+    }
+    
+    @Autowired
+    private com.cicd.service.GitHubService gitHubService;
+
+    /**
+     * ENDPOINT: Get recent commits
+     * GET /api/pipeline/github/commits
+     */
+    @GetMapping("/github/commits")
+    public ResponseEntity<String> getRecentCommits(@RequestParam String repoUrl) {
+        log.info("API: Fetching recent commits for: {}", repoUrl);
+        String commits = gitHubService.getRecentCommits(repoUrl);
+        return ResponseEntity.ok(commits);
     }
 }

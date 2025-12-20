@@ -33,7 +33,31 @@ const TriggerPipeline = () => {
     setSuccess(false);
 
     try {
-      const response = await triggerPipeline(formData);
+      // Extract owner and repo from URL
+      const urlParts = formData.repositoryUrl.replace('.git', '').split('/');
+      const owner = urlParts[urlParts.length - 2];
+      const repo = urlParts[urlParts.length - 1];
+      
+      // Fetch latest commit SHA from GitHub
+      let commitHash = null;
+      try {
+        const githubResponse = await fetch(
+          `https://api.github.com/repos/${owner}/${repo}/commits/${formData.branchName}`
+        );
+        if (githubResponse.ok) {
+          const commitData = await githubResponse.json();
+          commitHash = commitData.sha;
+          console.log('Fetched commit SHA:', commitHash);
+        }
+      } catch (err) {
+        console.warn('Could not fetch commit SHA:', err);
+      }
+      
+      // Trigger pipeline with commit hash
+      const response = await triggerPipeline({
+        ...formData,
+        commitHash: commitHash
+      });
       setSuccess(true);
       
       // Redirect to execution details after 2 seconds

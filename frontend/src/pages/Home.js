@@ -5,6 +5,7 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -12,17 +13,27 @@ const Home = () => {
   return (
     <div style={styles.container}>
       {/* Hero Section */}
-      <div style={styles.hero}>
+      <motion.div
+        style={styles.hero}
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
+      >
         <div style={styles.heroGlow}></div>
         <div style={styles.heroContent}>
-          <div style={styles.badge}>
+          <motion.div
+            style={styles.badge}
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.2 }}
+          >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="#3fb950">
-              <path d="M12 2L2 7L12 12L22 7L12 2Z"/>
+              <path d="M12 2L2 7L12 12L22 7L12 2Z" />
             </svg>
             <span>Production Ready</span>
-          </div>
+          </motion.div>
           <h1 style={styles.heroTitle}>
-            CI/CD Pipeline<br/>
+            CI/CD Pipeline<br />
             <span style={styles.heroGradient}>Automation Platform</span>
           </h1>
           <p style={styles.heroDescription}>
@@ -30,19 +41,29 @@ const Home = () => {
             DevOps practices. Powered by GitHub, Jenkins, and modern cloud infrastructure.
           </p>
           <div style={styles.heroButtons}>
-            <button style={styles.primaryButton} onClick={() => navigate('/pipeline')}>
+            <motion.button
+              style={styles.primaryButton}
+              onClick={() => navigate('/pipeline')}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <path d="M13 2L3 14H12L11 22L21 10H12L13 2Z" fill="currentColor"/>
+                <path d="M13 2L3 14H12L11 22L21 10H12L13 2Z" fill="currentColor" />
               </svg>
               Trigger Pipeline
-            </button>
-            <button style={styles.secondaryButton} onClick={() => navigate('/dashboard')}>
+            </motion.button>
+            <motion.button
+              style={styles.secondaryButton}
+              onClick={() => navigate('/dashboard')}
+              whileHover={{ scale: 1.05, backgroundColor: 'rgba(255,255,255,0.05)' }}
+              whileTap={{ scale: 0.95 }}
+            >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <path d="M9 3H5C3.89543 3 3 3.89543 3 5V9C3 10.1046 3.89543 11 5 11H9C10.1046 11 11 10.1046 11 9V5C11 3.89543 10.1046 3 9 3Z" stroke="currentColor" strokeWidth="2"/>
-                <path d="M19 3H15C13.8954 3 13 3.89543 13 5V9C13 10.1046 13.8954 11 15 11H19C20.1046 11 21 10.1046 21 9V5C21 3.89543 20.1046 3 19 3Z" stroke="currentColor" strokeWidth="2"/>
+                <path d="M9 3H5C3.89543 3 3 3.89543 3 5V9C3 10.1046 3.89543 11 5 11H9C10.1046 11 11 10.1046 11 9V5C11 3.89543 10.1046 3 9 3Z" stroke="currentColor" strokeWidth="2" />
+                <path d="M19 3H15C13.8954 3 13 3.89543 13 5V9C13 10.1046 13.8954 11 15 11H19C20.1046 11 21 10.1046 21 9V5C21 3.89543 20.1046 3 19 3Z" stroke="currentColor" strokeWidth="2" />
               </svg>
               View Dashboard
-            </button>
+            </motion.button>
           </div>
           <div style={styles.stats}>
             <div style={styles.stat}>
@@ -59,14 +80,20 @@ const Home = () => {
             </div>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Features Grid */}
       <div style={styles.features}>
-        <div style={styles.featureCard}>
-          <div style={{...styles.featureIcon, background: 'rgba(88, 166, 255, 0.15)', color: '#58a6ff'}}>
+        <motion.div
+          style={styles.featureCard}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          whileHover={{ y: -5 }}
+        >
+          <div style={{ ...styles.featureIcon, background: 'rgba(88, 166, 255, 0.15)', color: '#58a6ff' }}>
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-              <path d="M12 0C5.37 0 0 5.37 0 12C0 17.31 3.435 21.795 8.205 23.385C8.805 23.49 9.03 23.13 9.03 22.815C9.03 22.53 9.015 21.585 9.015 20.58C6 21.135 5.22 19.845 4.98 19.17C4.845 18.825 4.26 17.76 3.75 17.475C3.33 17.25 2.73 16.695 3.735 16.68C4.68 16.665 5.355 17.55 5.58 17.91C6.66 19.725 8.385 19.215 9.075 18.9C9.18 18.12 9.495 17.595 9.84 17.295C7.17 16.995 4.38 15.96 4.38 11.37C4.38 10.065 4.845 8.985 5.61 8.145C5.49 7.845 5.07 6.615 5.73 4.965C5.73 4.965 6.735 4.65 9.03 6.195C9.99 5.925 11.01 5.79 12.03 5.79C13.05 5.79 14.07 5.925 15.03 6.195C17.325 4.635 18.33 4.965 18.33 4.965C18.99 6.615 18.57 7.845 18.45 8.145C19.215 8.985 19.68 10.05 19.68 11.37C19.68 15.975 16.875 16.995 14.205 17.295C14.64 17.67 15.015 18.39 15.015 19.515C15.015 21.12 15 22.41 15 22.815C15 23.13 15.225 23.505 15.825 23.385C20.565 21.795 24 17.295 24 12C24 5.37 18.63 0 12 0Z" fill="currentColor"/>
+              <path d="M12 0C5.37 0 0 5.37 0 12C0 17.31 3.435 21.795 8.205 23.385C8.805 23.49 9.03 23.13 9.03 22.815C9.03 22.53 9.015 21.585 9.015 20.58C6 21.135 5.22 19.845 4.98 19.17C4.845 18.825 4.26 17.76 3.75 17.475C3.33 17.25 2.73 16.695 3.735 16.68C4.68 16.665 5.355 17.55 5.58 17.91C6.66 19.725 8.385 19.215 9.075 18.9C9.18 18.12 9.495 17.595 9.84 17.295C7.17 16.995 4.38 15.96 4.38 11.37C4.38 10.065 4.845 8.985 5.61 8.145C5.49 7.845 5.07 6.615 5.73 4.965C5.73 4.965 6.735 4.65 9.03 6.195C9.99 5.925 11.01 5.79 12.03 5.79C13.05 5.79 14.07 5.925 15.03 6.195C17.325 4.635 18.33 4.965 18.33 4.965C18.99 6.615 18.57 7.845 18.45 8.145C19.215 8.985 19.68 10.05 19.68 11.37C19.68 15.975 16.875 16.995 14.205 17.295C14.64 17.67 15.015 18.39 15.015 19.515C15.015 21.12 15 22.41 15 22.815C15 23.13 15.225 23.505 15.825 23.385C20.565 21.795 24 17.295 24 12C24 5.37 18.63 0 12 0Z" fill="currentColor" />
             </svg>
           </div>
           <h3 style={styles.featureTitle}>GitHub Integration</h3>
@@ -77,12 +104,18 @@ const Home = () => {
             <span style={styles.tag}>Webhooks</span>
             <span style={styles.tag}>Auto-trigger</span>
           </div>
-        </div>
+        </motion.div>
 
-        <div style={styles.featureCard}>
-          <div style={{...styles.featureIcon, background: 'rgba(210, 153, 34, 0.15)', color: '#d29922'}}>
+        <motion.div
+          style={styles.featureCard}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          whileHover={{ y: -5 }}
+        >
+          <div style={{ ...styles.featureIcon, background: 'rgba(210, 153, 34, 0.15)', color: '#d29922' }}>
             <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm-.5 3h.5v9H12.5V3zm-.5 12h1v1h-1v-1z"/>
+              <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm-.5 3h.5v9H12.5V3zm-.5 12h1v1h-1v-1z" />
             </svg>
           </div>
           <h3 style={styles.featureTitle}>Jenkins Pipeline</h3>
@@ -93,12 +126,18 @@ const Home = () => {
             <span style={styles.tag}>CI/CD</span>
             <span style={styles.tag}>Multi-stage</span>
           </div>
-        </div>
+        </motion.div>
 
-        <div style={styles.featureCard}>
-          <div style={{...styles.featureIcon, background: 'rgba(0, 0, 0, 1)', color: '#ffffff', border: '1px solid #30363d'}}>
+        <motion.div
+          style={styles.featureCard}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+          whileHover={{ y: -5 }}
+        >
+          <div style={{ ...styles.featureIcon, background: 'rgba(0, 0, 0, 1)', color: '#ffffff', border: '1px solid #30363d' }}>
             <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M24 22.525H0l12-21.05 12 21.05z"/>
+              <path d="M24 22.525H0l12-21.05 12 21.05z" />
             </svg>
           </div>
           <h3 style={styles.featureTitle}>Vercel-like Deployment</h3>
@@ -109,7 +148,7 @@ const Home = () => {
             <span style={styles.tag}>Zero-downtime</span>
             <span style={styles.tag}>Auto-rollback</span>
           </div>
-        </div>
+        </motion.div>
       </div>
 
       {/* Pipeline Flow */}
@@ -128,7 +167,7 @@ const Home = () => {
           ].map((step, idx) => (
             <React.Fragment key={idx}>
               <div style={styles.flowStep}>
-                <div style={{...styles.flowIcon, borderColor: step.color, color: step.color}}>
+                <div style={{ ...styles.flowIcon, borderColor: step.color, color: step.color }}>
                   {step.icon}
                 </div>
                 <div style={styles.flowTitle}>{step.title}</div>
@@ -137,7 +176,7 @@ const Home = () => {
               {idx < 4 && (
                 <div style={styles.flowArrow}>
                   <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
-                    <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="#30363d" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="#30363d" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </div>
               )}
@@ -159,7 +198,7 @@ const Home = () => {
             { name: 'H2 Database', desc: 'Data Storage', color: '#58a6ff' }
           ].map((tech, idx) => (
             <div key={idx} style={styles.techCard}>
-              <div style={{...styles.techDot, background: tech.color}}></div>
+              <div style={{ ...styles.techDot, background: tech.color }}></div>
               <div>
                 <div style={styles.techName}>{tech.name}</div>
                 <div style={styles.techDesc}>{tech.desc}</div>

@@ -2,6 +2,7 @@ package com.cicd;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
  * STUDENT CI/CD LAB - MAIN APPLICATION CLASS
@@ -12,9 +13,12 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * - Component scanning
  * - Configuration properties
  * 
+ * @EnableScheduling enables automatic polling of Jenkins build status
+ * 
  * @author Student CI/CD Lab Team
  */
 @SpringBootApplication
+@EnableScheduling
 public class CicdApplication {
 
     /**

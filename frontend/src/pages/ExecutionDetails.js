@@ -20,16 +20,17 @@ const ExecutionDetails = () => {
 
   useEffect(() => {
     fetchExecutionDetails();
-    
-    // Auto-refresh every 3 seconds if pipeline is running
-    const interval = setInterval(() => {
-      if (execution?.status === 'RUNNING' || execution?.status === 'PENDING') {
-        fetchExecutionDetails();
-      }
-    }, 3000);
-    
-    return () => clearInterval(interval);
   }, [id]);
+
+  useEffect(() => {
+    let interval;
+    if (execution?.status === 'RUNNING' || execution?.status === 'PENDING') {
+      interval = setInterval(() => {
+        fetchExecutionDetails();
+      }, 3000);
+    }
+    return () => clearInterval(interval);
+  }, [execution, id]);
 
   const fetchExecutionDetails = async () => {
     try {

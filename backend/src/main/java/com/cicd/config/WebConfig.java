@@ -32,17 +32,21 @@ public class WebConfig {
      * - All headers
      */
     @Bean
-    public WebMvcConfigurer corsConfigurer() {
-        return new WebMvcConfigurer() {
-            @Override
-            public void addCorsMappings(CorsRegistry registry) {
-                registry.addMapping("/api/**") // Apply to all /api/* endpoints
-                        .allowedOrigins("*") // Allow all origins (Vercel, Localhost, etc.)
-                        .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS") // Allow all methods
-                        .allowedHeaders("*") // Allow all headers
-                        .allowCredentials(true) // Allow cookies
-                        .maxAge(3600); // Cache preflight response for 1 hour
-            }
-        };
+    public org.springframework.web.filter.CorsFilter corsFilter() {
+        org.springframework.web.cors.UrlBasedCorsConfigurationSource source = new org.springframework.web.cors.UrlBasedCorsConfigurationSource();
+        org.springframework.web.cors.CorsConfiguration config = new org.springframework.web.cors.CorsConfiguration();
+        
+        // Allow credentials (cookies, auth headers)
+        config.setAllowCredentials(true);
+        
+        // ALLOW ALL ORIGINS using Check Pattern (Correct way for Spring Boot + Credentials)
+        config.addAllowedOriginPattern("*"); 
+        
+        // Allow all headers and methods
+        config.addAllowedHeader("*");
+        config.addAllowedMethod("*");
+        
+        source.registerCorsConfiguration("/**", config);
+        return new org.springframework.web.filter.CorsFilter(source);
     }
 }

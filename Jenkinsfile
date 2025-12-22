@@ -39,6 +39,15 @@ pipeline {
     }
     
     /*
+     * TRIGGERS
+     * Automatically trigger the pipeline
+     */
+    triggers {
+        // Check for SCM changes every minute
+        pollSCM '* * * * *'
+    }
+    
+    /*
      * ENVIRONMENT VARIABLES
      * Define variables used across the pipeline
      */
